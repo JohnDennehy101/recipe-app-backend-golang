@@ -1,0 +1,6 @@
+create_table("instructions") {
+t.Column("id", "integer", {primary: true})
+t.Column("text", "string", {})
+t.Column("line", "integer", {})
+t.Column("recipe_id", "integer", {})
+}

@@ -1,0 +1,8 @@
+add_foreign_key("recipe_ingredients", "ingredient_id", {"ingredients": ["id"]}, {
+    "on_delete": "cascade",
+    "on_update": "cascade",
+})
+add_foreign_key("recipe_ingredients", "recipe_id", {"recipes": ["id"]}, {
+    "on_delete": "cascade",
+    "on_update": "cascade",
+})

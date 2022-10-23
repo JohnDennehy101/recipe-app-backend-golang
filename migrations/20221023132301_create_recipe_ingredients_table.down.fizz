@@ -1,0 +1,1 @@
+sql("drop table recipe_ingredients")

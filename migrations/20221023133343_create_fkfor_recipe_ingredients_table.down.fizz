@@ -1,0 +1,2 @@
+drop_foreign_key("recipe_ingredients", "recipe_ingredients_recipes_id_fk", {})
+drop_foreign_key("recipe_ingredients", "recipe_ingredients_ingredients_id_fk", {})
