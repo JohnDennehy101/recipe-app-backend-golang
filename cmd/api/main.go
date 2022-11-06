@@ -1,17 +1,40 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/JohnDennehy101/recipe-app-backend-golang/internal/driver"
+	"github.com/JohnDennehy101/recipe-app-backend-golang/models"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 )
 
 const projectDirName = "back-end"
+
+const version = "1.0.0"
+
+type config struct {
+	port int
+	env  string
+}
+
+type application struct {
+	config config
+	logger *log.Logger
+	models models.Models
+}
+
+type AppStatus struct {
+	Status      string
+	Environment string
+	Version     string
+}
 
 func loadEnv() {
 	projectName := regexp.MustCompile(`^(.*` + projectDirName + `)`)
@@ -27,6 +50,12 @@ func loadEnv() {
 
 func main() {
 
+	var cfg config
+
+	flag.IntVar(&cfg.port, "port", 4000, "Server port")
+	flag.StringVar(&cfg.env, "env", "development", "application environment (development|production)")
+	flag.Parse()
+
 	loadEnv()
 	databaseHost := os.Getenv("DATABASE_HOST")
 	databasePort := os.Getenv("DATABASE_PORT")
@@ -39,6 +68,30 @@ func main() {
 
 	if err != nil {
 		log.Fatal("Cannot connect to database")
+	}
+
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	app := &application{
+		config: cfg,
+		logger: logger,
+		models: models.NewModels(db.SQL),
+	}
+
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.port),
+		Handler:      app.routes(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
+
+	logger.Println("Starting server on port", cfg.port)
+
+	err = srv.ListenAndServe()
+
+	if err != nil {
+		log.Println(err)
 	}
 
 	defer db.SQL.Close()
