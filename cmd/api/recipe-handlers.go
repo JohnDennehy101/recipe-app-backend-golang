@@ -1,27 +1,28 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/JohnDennehy101/recipe-app-backend-golang/models"
 )
 
 func (app *application) CreateRecipe(w http.ResponseWriter, r *http.Request) {
 
-	err := r.ParseForm()
+	var recipe models.Recipe
+
+	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		app.logger.Fatal(err)
 	}
 
-	title := r.FormValue("title")
-	description := r.FormValue("description")
+	if err := json.Unmarshal(requestBody, &recipe); err != nil {
+		app.logger.Fatal(err)
+	}
 
-	recipe := models.Recipe{
-		Title:       title,
-		Description: description,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+	if err != nil {
+		app.logger.Fatal(err)
 	}
 
 	err = app.models.DB.CreateRecipe(recipe)
