@@ -24,7 +24,7 @@ func (m *DBModel) CreateRecipe(res Recipe) error {
 
 	recipeIngredientTableDBStatement := `INSERT INTO recipe_ingredients (recipe_id, ingredient_id, amount, unit, created_at, updated_at) values ($1,$2,$3,$4,$5,$6)`
 
-	recipeInstructionTableDBStatement := `INSERT INTO instructions (text, line, recipe_id, created_at, updated_at) values ($1, $2,$3,$4,$5)`
+	recipeInstructionTableDBStatement := `INSERT INTO instructions (text, line, recipe_id, created_at, updated_at) values ($1,$2,$3,$4,$5)`
 
 	var recipeID int
 	err := m.DB.QueryRow(
@@ -62,7 +62,7 @@ func (m *DBModel) CreateRecipe(res Recipe) error {
 	return nil
 }
 
-func (m *DBModel) List() ([]Recipe, error) {
+func (m *DBModel) List() ([]*Recipe, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -87,11 +87,11 @@ func (m *DBModel) List() ([]Recipe, error) {
 
 	defer rows.Close()
 
-	var recipeList []Recipe
-	var instructionList []*Instruction
-	var ingredientList []*Ingredient
+	var recipeList []*Recipe
 
 	for rows.Next() {
+		var instructionList []*Instruction
+		var ingredientList []*Ingredient
 
 		var recipe Recipe
 
@@ -113,8 +113,6 @@ func (m *DBModel) List() ([]Recipe, error) {
 			return nil, err
 		}
 
-		defer instructionRows.Close()
-
 		for instructionRows.Next() {
 
 			var instruction Instruction
@@ -135,15 +133,13 @@ func (m *DBModel) List() ([]Recipe, error) {
 
 		}
 
-		recipe.Instructions = instructionList
+		instructionRows.Close()
 
 		ingredientRows, err := m.DB.QueryContext(ctx, ingredientsListDBStatement, recipe.ID)
 
 		if err != nil {
 			return nil, err
 		}
-
-		defer ingredientRows.Close()
 
 		for ingredientRows.Next() {
 
@@ -163,9 +159,13 @@ func (m *DBModel) List() ([]Recipe, error) {
 
 		}
 
+		ingredientRows.Close()
+
+		recipe.Instructions = instructionList
+
 		recipe.Ingredients = ingredientList
 
-		recipeList = append(recipeList, recipe)
+		recipeList = append(recipeList, &recipe)
 
 	}
 	return recipeList, nil
