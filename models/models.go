@@ -16,13 +16,13 @@ func NewModels(db *sql.DB) Models {
 }
 
 type Recipe struct {
-	ID           int           `json:"id"`
-	Title        string        `json:"title"`
-	Description  string        `json:"description"`
-	Ingredients  []Ingredient  `json:"ingredients"`
-	Instructions []Instruction `json:"instruction"`
-	CreatedAt    time.Time     `json:"created_at"`
-	UpdatedAt    time.Time     `json:"updated_at"`
+	ID           int            `json:"id"`
+	Title        string         `json:"title"`
+	Description  string         `json:"description"`
+	Ingredients  []*Ingredient  `json:"ingredients"`
+	Instructions []*Instruction `json:"instruction"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
 }
 
 type Ingredient struct {
@@ -30,15 +30,14 @@ type Ingredient struct {
 	Name      string    `json:"name"`
 	Amount    float64   `json:"amount"`
 	Unit      string    `json:"unit"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
 }
 
 type Instruction struct {
-	ID   int    `json:"id"`
-	Text string `json:"text"`
-	Line int    `json:"line"`
-	// RecipeID  int       `json:"recipe_id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int       `json:"id"`
+	Text      string    `json:"text"`
+	Line      int       `json:"line"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
 }

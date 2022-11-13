@@ -31,3 +31,19 @@ func (app *application) CreateRecipe(w http.ResponseWriter, r *http.Request) {
 		app.logger.Println(err)
 	}
 }
+
+func (app *application) GetAllRecipes(w http.ResponseWriter, r *http.Request) {
+
+	recipeList, err := app.models.DB.List()
+
+	if err != nil {
+		app.logger.Fatal(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":     "success",
+		"statusCode": 200,
+		"data":       recipeList,
+	})
+}

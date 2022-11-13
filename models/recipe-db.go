@@ -61,3 +61,112 @@ func (m *DBModel) CreateRecipe(res Recipe) error {
 
 	return nil
 }
+
+func (m *DBModel) List() ([]Recipe, error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	recipeListDBStatement := `
+	SELECT id, title, description, created_at, updated_at FROM recipes 
+	`
+
+	instructionsListDBStatement := `SELECT id, text, line, created_at, updated_at FROM instructions where recipe_id = $1 order by line`
+
+	ingredientsListDBStatement := `
+	SELECT i.ingredient, r.amount, r.unit from recipe_ingredients r
+	LEFT JOIN ingredients i on (r.ingredient_id = i.id)
+	WHERE r.recipe_id = $1
+	`
+
+	rows, err := m.DB.QueryContext(ctx, recipeListDBStatement)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var recipeList []Recipe
+	var instructionList []*Instruction
+	var ingredientList []*Ingredient
+
+	for rows.Next() {
+
+		var recipe Recipe
+
+		err := rows.Scan(
+			&recipe.ID,
+			&recipe.Title,
+			&recipe.Description,
+			&recipe.CreatedAt,
+			&recipe.UpdatedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		instructionRows, err := m.DB.QueryContext(ctx, instructionsListDBStatement, recipe.ID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		defer instructionRows.Close()
+
+		for instructionRows.Next() {
+
+			var instruction Instruction
+
+			err = instructionRows.Scan(
+				&instruction.ID,
+				&instruction.Text,
+				&instruction.Line,
+				&instruction.CreatedAt,
+				&instruction.UpdatedAt,
+			)
+
+			if err != nil {
+				return nil, err
+			}
+
+			instructionList = append(instructionList, &instruction)
+
+		}
+
+		recipe.Instructions = instructionList
+
+		ingredientRows, err := m.DB.QueryContext(ctx, ingredientsListDBStatement, recipe.ID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		defer ingredientRows.Close()
+
+		for ingredientRows.Next() {
+
+			var ingredient Ingredient
+
+			err = ingredientRows.Scan(
+				&ingredient.Name,
+				&ingredient.Amount,
+				&ingredient.Unit,
+			)
+
+			if err != nil {
+				return nil, err
+			}
+
+			ingredientList = append(ingredientList, &ingredient)
+
+		}
+
+		recipe.Ingredients = ingredientList
+
+		recipeList = append(recipeList, recipe)
+
+	}
+	return recipeList, nil
+}

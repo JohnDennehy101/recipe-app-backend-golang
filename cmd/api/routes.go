@@ -11,6 +11,7 @@ func (app *application) routes() *httprouter.Router {
 
 	router.HandlerFunc(http.MethodGet, "/status", app.statusHandler)
 	router.HandlerFunc(http.MethodPost, "/recipe", app.CreateRecipe)
+	router.HandlerFunc(http.MethodGet, "/recipe", app.GetAllRecipes)
 
 	return router
 }
